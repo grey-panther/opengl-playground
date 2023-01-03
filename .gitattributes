@@ -1,0 +1,22 @@
+# The original article about eol settings:
+# https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings
+
+# The default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Text files that will always be normalized and
+# converted to native line endings on checkout.
+*.c text
+*.h text
+*.cpp text
+*.hpp text
+*.txt text
+*.md text
+
+# Files that will always have CRLF line endings on checkout.
+# *.sln text eol=crlf
+
+# Files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.tga binary
