@@ -118,6 +118,7 @@ void doMainUpdate()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Create and bind vertex array object (vao).
+	// All the next calls of glBindBuffer, glVertexAttribPointer, glEnableVertexAttribArray will be bound to this vao.
 	GLuint vaoId = 0;
 	glGenVertexArrays(1, &vaoId);
 	glBindVertexArray(vaoId);
@@ -128,19 +129,28 @@ void doMainUpdate()
 	glBindBuffer(GL_ARRAY_BUFFER, vboId);
 
 	// Fill vbo.
-	const int verticesAmount = 3;
-	const auto coords = std::array<float, verticesAmount * 3> {
-			-0.5f, -0.5f, 0.f,
-			0.5f, -0.5f, 0.f,
-			0.f, 0.5f, 0.f
+	struct VertexFormat {
+		struct Pos {
+			float x = 0.f;
+			float y = 0.f;
+			float z = 0.f;
+		};
+		Pos pos;
 	};
-	const size_t bufferBytesSize = sizeof(coords[0]) * coords.size();
-	glBufferData(GL_ARRAY_BUFFER, bufferBytesSize, coords.data(), GL_STATIC_DRAW);
+	const int verticesAmount = 3;
+	const auto vertices = std::array<VertexFormat, verticesAmount> {
+			VertexFormat{-0.5f, -0.5f, 0.f},
+			VertexFormat{0.5f, -0.5f, 0.f},
+			VertexFormat{0.f, 0.5f, 0.f},
+	};
+	const size_t bufferBytesSize = sizeof(vertices[0]) * vertices.size();
+	glBufferData(GL_ARRAY_BUFFER, bufferBytesSize, vertices.data(), GL_STATIC_DRAW);
 
 	// Configure vertex attributes.
-	const int attrLocation = 0;
-	const int attrSize = 3;								// 3 floats of vec3.
-	const int attrStride = attrSize * sizeof(float);	// Next vertex attribute can be found after that amount of bytes.
+	// 0. in vec3 aPos
+	const int attrLocation = 0;						// The position of the attribute in the vertex shader.
+	const int attrSize = 3;							// The number of components per the vertex attribute. Must be 1, 2, 3, 4.
+	const int attrStride = sizeof(VertexFormat);	// The next vertex attribute can be found after that amount of bytes.
 	glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, nullptr);
 	glEnableVertexAttribArray(attrLocation);
 
