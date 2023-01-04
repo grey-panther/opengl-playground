@@ -1,4 +1,4 @@
-#include <array>
+#include <vector>
 #include <iostream>
 
 // glad.h must be included before any header files that require OpenGL (like GLFW).
@@ -11,6 +11,8 @@ static constexpr int WINDOW_HEIGHT = 728;
 static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 
 static GLuint _shaderProgramId = 0;
+static GLuint _vertexArrayBufferId = 0;
+static size_t _verticesAmount = 0;
 
 
 void onGlfwError(int error, const char* description)
@@ -111,19 +113,16 @@ void loadShaderProgram()
 }
 
 
-void doMainUpdate()
+void doOnce()
 {
-	// Clear the frame buffer.
-	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	loadShaderProgram();
 
-	// Create and bind vertex array object (vao).
+	// Create and bind vertex array object (VAO).
 	// All the next calls of glBindBuffer, glVertexAttribPointer, glEnableVertexAttribArray will be bound to this vao.
-	GLuint vaoId = 0;
-	glGenVertexArrays(1, &vaoId);
-	glBindVertexArray(vaoId);
+	glGenVertexArrays(1, &_vertexArrayBufferId);
+	glBindVertexArray(_vertexArrayBufferId);
 
-	// Create and bind vertex buffer object (vbo).
+	// Create and bind vertex buffer object (VBO).
 	GLuint vboId = 0;
 	glGenBuffers(1, &vboId);
 	glBindBuffer(GL_ARRAY_BUFFER, vboId);
@@ -137,14 +136,15 @@ void doMainUpdate()
 		};
 		Pos pos;
 	};
-	const int verticesAmount = 3;
-	const auto vertices = std::array<VertexFormat, verticesAmount> {
+	const auto vertices = std::vector<VertexFormat> {
 			VertexFormat{-0.5f, -0.5f, 0.f},
 			VertexFormat{0.5f, -0.5f, 0.f},
 			VertexFormat{0.f, 0.5f, 0.f},
 	};
+	_verticesAmount = vertices.size();
+
 	const size_t bufferBytesSize = sizeof(vertices[0]) * vertices.size();
-	glBufferData(GL_ARRAY_BUFFER, bufferBytesSize, vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) bufferBytesSize, vertices.data(), GL_STATIC_DRAW);
 
 	// Configure vertex attributes.
 	// 0. in vec3 aPos
@@ -154,8 +154,20 @@ void doMainUpdate()
 	glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, nullptr);
 	glEnableVertexAttribArray(attrLocation);
 
+	// Reset bound VAO.
+	glBindVertexArray(0);
+}
+
+
+void doMainUpdate()
+{
+	// Clear the frame buffer.
+	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	glUseProgram(_shaderProgramId);
-	glDrawArrays(GL_TRIANGLES, 0, verticesAmount);
+	glBindVertexArray(_vertexArrayBufferId);
+	glDrawArrays(GL_TRIANGLES, 0, (GLsizei) _verticesAmount);
 }
 
 
@@ -201,7 +213,7 @@ int main()
 	onFrameBufferSizeChanged(window, width, height);
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
 
-	loadShaderProgram();
+	doOnce();
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
