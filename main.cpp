@@ -13,6 +13,7 @@ static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 static GLuint _shaderProgramId = 0;
 static GLuint _vertexArrayBufferId = 0;
 static size_t _verticesAmount = 0;
+static size_t _indicesAmount = 0;
 
 
 void onGlfwError(int error, const char* description)
@@ -137,14 +138,28 @@ void doOnce()
 		Pos pos;
 	};
 	const auto vertices = std::vector<VertexFormat> {
-			VertexFormat{-0.5f, -0.5f, 0.f},
-			VertexFormat{0.5f, -0.5f, 0.f},
-			VertexFormat{0.f, 0.5f, 0.f},
+			VertexFormat{-0.5f, -0.5f, 0.f},	// Left bottom
+			VertexFormat{0.5f, -0.5f, 0.f},		// Right bottom
+			VertexFormat{-0.5f, 0.5f, 0.f},		// Left top
+			VertexFormat{0.5f, 0.5f, 0.f},		// Right top
 	};
 	_verticesAmount = vertices.size();
 
-	const size_t bufferBytesSize = sizeof(vertices[0]) * vertices.size();
+	const size_t bufferBytesSize = sizeof(vertices[0]) * _verticesAmount;
 	glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) bufferBytesSize, vertices.data(), GL_STATIC_DRAW);
+
+	// Create and fill Element Buffer Object (EBO).
+	// It contains vertex indices (from VBO) which need to draw.
+	GLuint elementsBuffer = 0;
+	glGenBuffers(1, &elementsBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsBuffer);
+	const auto indices = std::vector<unsigned int> {
+			0, 1, 2,
+			1, 2, 3,
+	};
+	_indicesAmount = indices.size();
+	const size_t elementsBufferSize = _indicesAmount * sizeof(indices[0]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) elementsBufferSize, indices.data(), GL_STATIC_DRAW);
 
 	// Configure vertex attributes.
 	// 0. in vec3 aPos
@@ -167,7 +182,15 @@ void doMainUpdate()
 
 	glUseProgram(_shaderProgramId);
 	glBindVertexArray(_vertexArrayBufferId);
-	glDrawArrays(GL_TRIANGLES, 0, (GLsizei) _verticesAmount);
+
+	// Set wireframe mode drawing.
+	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	// Draw vertices directly from VBO connected to _vertexArrayBufferId.
+	// glDrawArrays(GL_TRIANGLES, 0, (GLsizei) _verticesAmount);
+
+	// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
+	glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
 }
 
 
