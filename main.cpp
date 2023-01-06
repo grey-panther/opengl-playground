@@ -230,6 +230,10 @@ int main()
 	const auto version = glGetString(GL_VERSION);
 	std::cout << "OpenGL version: " << version << "\n";
 
+	GLint maxVertexAttributes = 0;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttributes);
+	std::cout << "\tMax vertex attributes: " << maxVertexAttributes << std::endl;
+
 	int width = 0;
 	int height = 0;
 	glfwGetFramebufferSize(window, &width, &height);
