@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 // glad.h must be included before any header files that require OpenGL (like GLFW).
 #include <glad/glad.h>
@@ -67,9 +68,10 @@ void loadShaderProgram()
 	// Load and compile fragment shader.
 	const char* fragmentShaderText =
 			"#version 330 core\n"
+			"uniform vec4 uColor;\n"
 			"out vec4 FragColor;\n"
 			"void main() {\n"
-			"    FragColor = vec4(0.99, 0.43, 0.0, 1.0);\n"
+			"    FragColor = uColor;\n"
 			"}";
 
 	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -182,6 +184,15 @@ void doMainUpdate()
 
 	glUseProgram(_shaderProgramId);
 	glBindVertexArray(_vertexArrayBufferId);
+
+	// Set uniform values after the program binding.
+	const GLint uColorLocation = glGetUniformLocation(_shaderProgramId, "uColor");
+	if (uColorLocation >= 0) {
+		const double timeSec = glfwGetTime();
+		const auto v = static_cast<float>(std::sin(timeSec));
+		const float blue = v * 0.5f + 0.5f;
+		glUniform4f(uColorLocation, 0.99f, 0.43f, blue, 1.f);
+	}
 
 	// Set wireframe mode drawing.
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
