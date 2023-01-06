@@ -46,7 +46,10 @@ void loadShaderProgram()
 	const char* vertexShaderText =
 			"#version 330 core\n"
 			"layout (location = 0) in vec3 aPos;\n"
+			"layout (location = 1) in vec4 aColor;\n"
+			"out vec4 vColor;\n"
 			"void main() {\n"
+			"    vColor = aColor;\n"
 			"    gl_Position = vec4(aPos, 1.0);\n"
 			"}";
 
@@ -68,10 +71,10 @@ void loadShaderProgram()
 	// Load and compile fragment shader.
 	const char* fragmentShaderText =
 			"#version 330 core\n"
-			"uniform vec4 uColor;\n"
+			"in vec4 vColor;\n"
 			"out vec4 FragColor;\n"
 			"void main() {\n"
-			"    FragColor = uColor;\n"
+			"    FragColor = vColor;\n"
 			"}";
 
 	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -137,13 +140,20 @@ void doOnce()
 			float y = 0.f;
 			float z = 0.f;
 		};
+		struct Color {
+			float r = 0.f;
+			float g = 0.f;
+			float b = 0.f;
+			float a = 0.f;
+		};
 		Pos pos;
+		Color color;
 	};
 	const auto vertices = std::vector<VertexFormat> {
-			VertexFormat{-0.5f, -0.5f, 0.f},	// Left bottom
-			VertexFormat{0.5f, -0.5f, 0.f},		// Right bottom
-			VertexFormat{-0.5f, 0.5f, 0.f},		// Left top
-			VertexFormat{0.5f, 0.5f, 0.f},		// Right top
+			VertexFormat{{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f, 1.f}},	// Left bottom
+			VertexFormat{{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f, 1.f}},		// Right bottom
+			VertexFormat{{-0.5f, 0.5f, 0.f}, {0.f, 0.f, 1.f, 1.f}},		// Left top
+			VertexFormat{{0.5f, 0.5f, 0.f}, {0.f, 1.f, 1.f, 1.f}},		// Right top
 	};
 	_verticesAmount = vertices.size();
 
@@ -164,12 +174,24 @@ void doOnce()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) elementsBufferSize, indices.data(), GL_STATIC_DRAW);
 
 	// Configure vertex attributes.
-	// 0. in vec3 aPos
-	const int attrLocation = 0;						// The position of the attribute in the vertex shader.
-	const int attrSize = 3;							// The number of components per the vertex attribute. Must be 1, 2, 3, 4.
-	const int attrStride = sizeof(VertexFormat);	// The next vertex attribute can be found after that amount of bytes.
-	glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, nullptr);
-	glEnableVertexAttribArray(attrLocation);
+	{
+		// 0. in vec3 aPos
+		const int attrLocation = 0;                     // The position of the attribute in the vertex shader.
+		const int attrSize = 3;                         // The number of components per the vertex attribute. Must be 1, 2, 3, 4.
+		const int attrStride = sizeof(VertexFormat);    // The next vertex attribute can be found after that amount of bytes.
+		const int attrDataOffset = 0;					// The offset of the attribute in bytes in the buffer data array.
+		glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, (void*) attrDataOffset);
+		glEnableVertexAttribArray(attrLocation);
+	}
+	{
+		// 1. in vec4 aColor
+		const int attrLocation = 1;
+		const int attrSize = 4;
+		const int attrStride = sizeof(VertexFormat);
+		const int attrDataOffset = sizeof(VertexFormat::Pos);
+		glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, (void*) attrDataOffset);
+		glEnableVertexAttribArray(attrLocation);
+	}
 
 	// Reset bound VAO.
 	glBindVertexArray(0);
