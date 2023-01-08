@@ -155,6 +155,42 @@ void Shader::bind() const
 }
 
 
+void Shader::setUniform1f(const std::string& name, float v1) const
+{
+	assert(isValid());
+
+	// Must be called when the program is bound.
+	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+	if (location >= 0) {
+		glUniform1f(location, v1);
+	}
+}
+
+
+void Shader::setUniform2f(const std::string& name, float v1, float v2) const
+{
+	assert(isValid());
+
+	// Must be called when the program is bound.
+	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+	if (location >= 0) {
+		glUniform2f(location, v1, v2);
+	}
+}
+
+
+void Shader::setUniform3f(const std::string& name, float v1, float v2, float v3) const
+{
+	assert(isValid());
+
+	// Must be called when the program is bound.
+	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+	if (location >= 0) {
+		glUniform3f(location, v1, v2, v3);
+	}
+}
+
+
 void Shader::setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const
 {
 	assert(isValid());

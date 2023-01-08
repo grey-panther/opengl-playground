@@ -31,6 +31,12 @@ public:
 
 	void bind() const;
 
+	void setUniform1f(const std::string& name, float v1) const;
+
+	void setUniform2f(const std::string& name, float v1, float v2) const;
+
+	void setUniform3f(const std::string& name, float v1, float v2, float v3) const;
+
 	void setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const;
 
 private:
