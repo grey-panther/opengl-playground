@@ -1,6 +1,11 @@
-#include <vector>
-#include <iostream>
+#include "Shader.hpp"
+
+#include "Utilities.hpp"
+
 #include <cmath>
+#include <iostream>
+#include <memory>
+#include <vector>
 
 // glad.h must be included before any header files that require OpenGL (like GLFW).
 #include <glad/glad.h>
@@ -11,10 +16,10 @@ static constexpr int WINDOW_WIDTH = 1024;
 static constexpr int WINDOW_HEIGHT = 728;
 static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 
-static GLuint _shaderProgramId = 0;
 static GLuint _vertexArrayBufferId = 0;
 static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
+static std::unique_ptr<Shader> _shader;
 
 
 void onGlfwError(int error, const char* description)
@@ -42,80 +47,10 @@ void processInput(GLFWwindow* window)
 
 void loadShaderProgram()
 {
-	// Load and compile vertex shader.
-	const char* vertexShaderText =
-			"#version 330 core\n"
-			"layout (location = 0) in vec3 aPos;\n"
-			"layout (location = 1) in vec4 aColor;\n"
-			"out vec4 vColor;\n"
-			"void main() {\n"
-			"    vColor = aColor;\n"
-			"    gl_Position = vec4(aPos, 1.0);\n"
-			"}";
-
-	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderText, nullptr);
-	glCompileShader(vertexShader);
-
-	int vshStatus = 0;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vshStatus);
-	if (vshStatus == GL_FALSE) {
-		std::string infoLog;
-		infoLog.resize(512);
-		glGetShaderInfoLog(vertexShader, (GLint) infoLog.size(), nullptr, infoLog.data());
-		std::cerr << "Vertex shader compilation failed:\n\t" << infoLog << std::endl;
-		return;
+	_shader = std::make_unique<Shader>("../assets/shaders/default.vsh", "../assets/shaders/default.fsh");
+	if (!_shader->isValid()) {
+		_shader.reset();
 	}
-
-
-	// Load and compile fragment shader.
-	const char* fragmentShaderText =
-			"#version 330 core\n"
-			"in vec4 vColor;\n"
-			"out vec4 FragColor;\n"
-			"void main() {\n"
-			"    FragColor = vColor;\n"
-			"}";
-
-	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderText, nullptr);
-	glCompileShader(fragmentShader);
-
-	int fshStatus = 0;
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fshStatus);
-	if (fshStatus == GL_FALSE) {
-		std::string infoLog;
-		infoLog.resize(512);
-		glGetShaderInfoLog(fragmentShader, (GLint) infoLog.size(), nullptr, infoLog.data());
-		std::cerr << "Fragment shader compilation failed:\n\t" << infoLog << std::endl;
-		return;
-	}
-
-
-	// Create and link shader program.
-	const GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	int programStatus = 0;
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &programStatus);
-	if (programStatus == GL_FALSE) {
-		std::string infoLog;
-		infoLog.resize(512);
-		glGetProgramInfoLog(shaderProgram, (GLint) infoLog.size(), nullptr, infoLog.data());
-		std::cerr << "Shader program link failed:\n\t" << infoLog << std::endl;
-		return;
-	}
-
-	// When the shader program is linked, shaders are no longer needed.
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-
-	std::cout << "Shaders are successfully loaded." << std::endl;
-
-	_shaderProgramId = shaderProgram;
 }
 
 
@@ -204,17 +139,17 @@ void doMainUpdate()
 	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glUseProgram(_shaderProgramId);
-	glBindVertexArray(_vertexArrayBufferId);
+	if (_shader) {
+		_shader->bind();
 
-	// Set uniform values after the program binding.
-	const GLint uColorLocation = glGetUniformLocation(_shaderProgramId, "uColor");
-	if (uColorLocation >= 0) {
+		// Set uniform values after the shader binding.
 		const double timeSec = glfwGetTime();
 		const auto v = static_cast<float>(std::sin(timeSec));
 		const float blue = v * 0.5f + 0.5f;
-		glUniform4f(uColorLocation, 0.99f, 0.43f, blue, 1.f);
+		_shader->setUniform4f("uColor", 0.99f, 0.43f, blue, 1.f);
 	}
+
+	glBindVertexArray(_vertexArrayBufferId);
 
 	// Set wireframe mode drawing.
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
