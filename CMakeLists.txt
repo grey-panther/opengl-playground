@@ -4,9 +4,9 @@ project(LearnOpenGL)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
-include_directories(src libs/glad/include libs/glfw/include)
+include_directories(src libs/glad/include libs/glfw/include libs/stb/include)
 
-file(GLOB_RECURSE SOURCE_FILES src/*.cpp libs/glad/src/glad.c main.cpp)
+file(GLOB_RECURSE SOURCE_FILES src/*.cpp libs/glad/src/glad.c libs/stb/src/stb_image.c main.cpp)
 add_executable(LearnOpenGL ${SOURCE_FILES})
 
 

@@ -10,6 +10,7 @@
 // glad.h must be included before any header files that require OpenGL (like GLFW).
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 
 static constexpr int WINDOW_WIDTH = 1024;
@@ -17,6 +18,7 @@ static constexpr int WINDOW_HEIGHT = 728;
 static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 
 static GLuint _vertexArrayBufferId = 0;
+static GLuint _textureId = 0;
 static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
 static std::unique_ptr<Shader> _shader;
@@ -54,9 +56,56 @@ void loadShaderProgram()
 }
 
 
+void loadTexture()
+{
+	// Load texture data from file.
+	constexpr auto textureFilename = "../assets/textures/wall.jpg";
+	int textureWidth = 0;
+	int textureHeight = 0;
+	int textureChannelsNum = 0;
+	unsigned char* textureData = stbi_load(textureFilename, &textureWidth, &textureHeight, &textureChannelsNum, 0);
+	if (textureData == nullptr) {
+		std::cerr << "stbi error! " << stbi_failure_reason() << ": " << textureFilename << std::endl;
+		return;
+	}
+
+	// Generate and bind texture.
+	glGenTextures(1, &_textureId);
+	glBindTexture(GL_TEXTURE_2D, _textureId);
+
+	// Set wrapping.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+	// Set filtering.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Load texture data to GPU.
+	const GLint lodLevel = 0; 						// lod - level of detail. Also, a mipmap level.
+	const GLint internalFormat = GL_RGB;
+	const GLenum pixelDataFormat = GL_RGB;
+	const GLenum pixelDataType = GL_UNSIGNED_BYTE;	// type of textureData elements.
+	glTexImage2D(GL_TEXTURE_2D, lodLevel, internalFormat, textureWidth, textureHeight, 0,
+				 pixelDataFormat, pixelDataType, textureData);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	// Free texture data.
+	stbi_image_free(textureData);
+
+	// Reset bound texture.
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	std::cout << "Texture is loaded: " << textureFilename << std::endl;
+}
+
+
 void doOnce()
 {
 	loadShaderProgram();
+
+	loadTexture();
 
 	// Create and bind vertex array object (VAO).
 	// All the next calls of glBindBuffer, glVertexAttribPointer, glEnableVertexAttribArray will be bound to this vao.
@@ -81,14 +130,19 @@ void doOnce()
 			float b = 0.f;
 			float a = 0.f;
 		};
+		struct TextureCoords {
+			float u = 0.f;
+			float v = 0.f;
+		};
 		Pos pos;
 		Color color;
+		TextureCoords texCoords;
 	};
 	const auto vertices = std::vector<VertexFormat> {
-			VertexFormat{{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f, 1.f}},	// Left bottom
-			VertexFormat{{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f, 1.f}},		// Right bottom
-			VertexFormat{{-0.5f, 0.5f, 0.f}, {0.f, 0.f, 1.f, 1.f}},		// Left top
-			VertexFormat{{0.5f, 0.5f, 0.f}, {0.f, 1.f, 1.f, 1.f}},		// Right top
+			VertexFormat{{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f, 1.f}, {0.f, 0.f}},	// Left bottom
+			VertexFormat{{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f, 1.f}, {1.f, 0.f}},		// Right bottom
+			VertexFormat{{-0.5f, 0.5f, 0.f}, {0.f, 0.f, 1.f, 1.f}, {0.f, 1.f}},		// Left top
+			VertexFormat{{0.5f, 0.5f, 0.f}, {0.f, 1.f, 1.f, 1.f}, {1.f, 1.f}},		// Right top
 	};
 	_verticesAmount = vertices.size();
 
@@ -127,6 +181,15 @@ void doOnce()
 		glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, (void*) attrDataOffset);
 		glEnableVertexAttribArray(attrLocation);
 	}
+	{
+		// 2. in vec2 aTexCoords
+		const int attrLocation = 2;
+		const int attrSize = 2;
+		const int attrStride = sizeof(VertexFormat);
+		const int attrDataOffset = sizeof(VertexFormat::Pos) + sizeof(VertexFormat::Color);
+		glVertexAttribPointer(attrLocation, attrSize, GL_FLOAT, GL_FALSE, attrStride, (void*) attrDataOffset);
+		glEnableVertexAttribArray(attrLocation);
+	}
 
 	// Reset bound VAO.
 	glBindVertexArray(0);
@@ -149,6 +212,7 @@ void doMainUpdate()
 		_shader->setUniform4f("uColor", 0.99f, 0.43f, blue, 1.f);
 	}
 
+	glBindTexture(GL_TEXTURE_2D, _textureId);
 	glBindVertexArray(_vertexArrayBufferId);
 
 	// Set wireframe mode drawing.
