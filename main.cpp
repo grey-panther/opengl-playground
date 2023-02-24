@@ -210,6 +210,9 @@ void doMainUpdate()
 		const auto v = static_cast<float>(std::sin(timeSec));
 		const float blue = v * 0.5f + 0.5f;
 		_shader->setUniform4f("uColor", 0.99f, 0.43f, blue, 1.f);
+
+		const float offsetX = v * 0.5f;
+		_shader->setUniform1f("uOffsetX", offsetX);
 	}
 
 	glBindTexture(GL_TEXTURE_2D, _textureId);
