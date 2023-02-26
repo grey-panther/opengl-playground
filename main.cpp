@@ -23,6 +23,7 @@ static GLuint _faceTextureId = 0;
 static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
 static std::unique_ptr<Shader> _shader;
+static float _mixProgress = 0.f;
 
 
 void onGlfwError(int error, const char* description)
@@ -44,6 +45,12 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		_mixProgress = std::min(1.f, _mixProgress + 0.005f);
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		_mixProgress = std::max(0.f, _mixProgress - 0.005f);
 	}
 }
 
@@ -228,7 +235,7 @@ void doMainUpdate()
 		const double timeSec = glfwGetTime();
 		const auto v = static_cast<float>(std::sin(timeSec));
 		const float progress = v * 0.5f + 0.5f; // [0, 1]
-		_shader->setUniform1f("uProgress", progress);
+		_shader->setUniform1f("uProgress", _mixProgress);
 
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
