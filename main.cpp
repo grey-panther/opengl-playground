@@ -18,7 +18,8 @@ static constexpr int WINDOW_HEIGHT = 728;
 static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 
 static GLuint _vertexArrayBufferId = 0;
-static GLuint _textureId = 0;
+static GLuint _wallTextureId = 0;
+static GLuint _faceTextureId = 0;
 static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
 static std::unique_ptr<Shader> _shader;
@@ -56,22 +57,31 @@ void loadShaderProgram()
 }
 
 
-void loadTexture()
+/**
+ * @brief Uploads a texture with a given file name to the GL internal memory.
+ * @param textureFilename
+ * @param internalFormat A format of pixels inside GL after they are loaded to GPU.
+ * @param pixelDataFormat A format of pixels in the texture file.
+ * @return GL texture id, which is more than 0, if it's a success; and which equals 0, if it's a failure.
+ */
+GLuint loadTexture(const std::string_view textureFilename, const GLint internalFormat, const GLenum pixelDataFormat)
 {
+	GLuint textureId = 0;
+
 	// Load texture data from file.
-	constexpr auto textureFilename = "../assets/textures/wall.jpg";
+	stbi_set_flip_vertically_on_load(true);
 	int textureWidth = 0;
 	int textureHeight = 0;
 	int textureChannelsNum = 0;
-	unsigned char* textureData = stbi_load(textureFilename, &textureWidth, &textureHeight, &textureChannelsNum, 0);
+	unsigned char* textureData = stbi_load(textureFilename.data(), &textureWidth, &textureHeight, &textureChannelsNum, 0);
 	if (textureData == nullptr) {
 		std::cerr << "stbi error! " << stbi_failure_reason() << ": " << textureFilename << std::endl;
-		return;
+		return textureId;
 	}
 
 	// Generate and bind texture.
-	glGenTextures(1, &_textureId);
-	glBindTexture(GL_TEXTURE_2D, _textureId);
+	glGenTextures(1, &textureId);
+	glBindTexture(GL_TEXTURE_2D, textureId);
 
 	// Set wrapping.
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -83,8 +93,6 @@ void loadTexture()
 
 	// Load texture data to GPU.
 	const GLint lodLevel = 0; 						// lod - level of detail. Also, a mipmap level.
-	const GLint internalFormat = GL_RGB;
-	const GLenum pixelDataFormat = GL_RGB;
 	const GLenum pixelDataType = GL_UNSIGNED_BYTE;	// type of textureData elements.
 	glTexImage2D(GL_TEXTURE_2D, lodLevel, internalFormat, textureWidth, textureHeight, 0,
 				 pixelDataFormat, pixelDataType, textureData);
@@ -98,6 +106,8 @@ void loadTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	std::cout << "Texture is loaded: " << textureFilename << std::endl;
+
+	return textureId;
 }
 
 
@@ -105,7 +115,8 @@ void doOnce()
 {
 	loadShaderProgram();
 
-	loadTexture();
+	_wallTextureId = loadTexture("../assets/textures/wall.jpg", GL_RGB, GL_RGB);
+	_faceTextureId = loadTexture("../assets/textures/awesomeface.png", GL_RGBA, GL_RGBA);
 
 	// Create and bind vertex array object (VAO).
 	// All the next calls of glBindBuffer, glVertexAttribPointer, glEnableVertexAttribArray will be bound to this vao.
@@ -202,9 +213,13 @@ void doMainUpdate()
 	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	const GLint samplerIndex = 0;
-	glActiveTexture(GL_TEXTURE0 + samplerIndex);
-	glBindTexture(GL_TEXTURE_2D, _textureId);
+	const GLint firstSamplerIndex = 0;
+	glActiveTexture(GL_TEXTURE0 + firstSamplerIndex);
+	glBindTexture(GL_TEXTURE_2D, _wallTextureId);
+
+	const GLint secondSamplerIndex = 1;
+	glActiveTexture(GL_TEXTURE0 + secondSamplerIndex);
+	glBindTexture(GL_TEXTURE_2D, _faceTextureId);
 
 	if (_shader) {
 		_shader->bind();
@@ -212,10 +227,11 @@ void doMainUpdate()
 		// Set uniform values after the shader binding.
 		const double timeSec = glfwGetTime();
 		const auto v = static_cast<float>(std::sin(timeSec));
-		const float blue = v * 0.5f + 0.5f;
-		_shader->setUniform4f("uColor", 0.99f, 0.43f, blue, 1.f);
+		const float progress = v * 0.5f + 0.5f; // [0, 1]
+		_shader->setUniform1f("uProgress", progress);
 
-		_shader->setUniform1i("sampler0", samplerIndex);
+		_shader->setUniform1i("sampler0", firstSamplerIndex);
+		_shader->setUniform1i("sampler1", secondSamplerIndex);
 	}
 
 	glBindVertexArray(_vertexArrayBufferId);
