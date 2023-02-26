@@ -202,6 +202,10 @@ void doMainUpdate()
 	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	const GLint samplerIndex = 0;
+	glActiveTexture(GL_TEXTURE0 + samplerIndex);
+	glBindTexture(GL_TEXTURE_2D, _textureId);
+
 	if (_shader) {
 		_shader->bind();
 
@@ -210,9 +214,10 @@ void doMainUpdate()
 		const auto v = static_cast<float>(std::sin(timeSec));
 		const float blue = v * 0.5f + 0.5f;
 		_shader->setUniform4f("uColor", 0.99f, 0.43f, blue, 1.f);
+
+		_shader->setUniform1i("sampler0", samplerIndex);
 	}
 
-	glBindTexture(GL_TEXTURE_2D, _textureId);
 	glBindVertexArray(_vertexArrayBufferId);
 
 	// Set wireframe mode drawing.

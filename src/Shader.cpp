@@ -203,6 +203,18 @@ void Shader::setUniform4f(const std::string& name, float v1, float v2, float v3,
 }
 
 
+void Shader::setUniform1i(const std::string& name, int v1) const
+{
+	assert(isValid());
+
+	// Must be called when the program is bound.
+	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+	if (location >= 0) {
+		glUniform1i(location, v1);
+	}
+}
+
+
 GLenum Shader::getGlShaderType(Shader::ShaderType type)
 {
 	GLenum shaderType = GL_INVALID_ENUM;
