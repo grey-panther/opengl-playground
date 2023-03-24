@@ -7,6 +7,10 @@
 #include <memory>
 #include <vector>
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+
 // glad.h must be included before any header files that require OpenGL (like GLFW).
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -36,6 +40,7 @@ void onGlfwError(int error, const char* description)
 
 void onFrameBufferSizeChanged(GLFWwindow* window, int width, int height)
 {
+	(void)(window);
 	glViewport(0, 0, width, height);
 }
 
@@ -84,8 +89,8 @@ GLuint loadTexture(const std::string_view textureFilename, const GLint internalF
 	glBindTexture(GL_TEXTURE_2D, textureId);
 
 	// Set wrapping.
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// Set filtering.
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
@@ -232,6 +237,12 @@ void doMainUpdate()
 
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
+
+		glm::mat4 transform = glm::mat4(1.f);
+		transform = glm::translate(transform, glm::vec3(0.5f, -0.4f, 0.f));
+		transform = glm::rotate(transform, float(timeSec), glm::vec3(0.f, 0.f, 1.f));
+		transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 1.f));
+		_shader->setMatrix4f("uTransform", transform);
 	}
 
 	glBindVertexArray(_vertexArrayBufferId);
@@ -244,6 +255,21 @@ void doMainUpdate()
 
 	// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
 	glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
+
+	// Make the second draw call.
+	{
+		if (_shader) {
+			const double timeSec = glfwGetTime();
+			const auto scale = static_cast<float>(std::sin(timeSec)) * 0.8f;
+
+			glm::mat4 transform = glm::mat4(1.f);
+			transform = glm::translate(transform, glm::vec3(-0.4f, 0.5f, 0.f));
+			transform = glm::scale(transform, glm::vec3(scale, scale, 1.f));
+			_shader->setMatrix4f("uTransform", transform);
+		}
+		// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
+		glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
+	}
 }
 
 

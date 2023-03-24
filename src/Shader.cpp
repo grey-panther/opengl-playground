@@ -5,6 +5,9 @@
 #include <iostream>
 #include <sstream>
 
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
+
 
 Shader::Shader(std::string_view vertexFileName, std::string_view fragmentFileName)
 {
@@ -211,6 +214,20 @@ void Shader::setUniform1i(const std::string& name, int v1) const
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
 	if (location >= 0) {
 		glUniform1i(location, v1);
+	}
+}
+
+
+void Shader::setMatrix4f(const std::string& name, const glm::mat4& mat) const
+{
+	assertTrue(isValid());
+
+	// Must be called when the program is bound.
+	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+	if (location >= 0) {
+		const GLsizei count = 1;
+		const GLboolean transpose = GL_FALSE;
+		glUniformMatrix4fv(location, count, transpose, glm::value_ptr(mat));
 	}
 }
 

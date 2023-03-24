@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include <glad/glad.h>
+#include <glm/fwd.hpp>
 
 
 class Shader
@@ -40,6 +41,8 @@ public:
 	void setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const;
 
 	void setUniform1i(const std::string& name, int v1) const;
+
+	void setMatrix4f(const std::string& name, const glm::mat4& mat) const;
 
 private:
 	static std::string loadShaderText(std::string_view fileName);
