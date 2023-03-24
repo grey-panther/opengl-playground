@@ -2,8 +2,7 @@
 
 #include "iostream"
 
-
-#define assert(cond) \
+#define assertTrue(cond) \
 do { \
 	if (!bool(cond)) { \
 		std::cerr <<       \
@@ -13,7 +12,7 @@ do { \
 	} \
 } while(false);
 
-#define assert2(cond, msg) \
+#define assertTrueMsg(cond, msg) \
 do { \
 	if (!bool(cond)) { \
 		std::cerr <<       \

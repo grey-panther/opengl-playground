@@ -90,7 +90,7 @@ std::string Shader::loadShaderText(std::string_view fileName)
 
 GLuint Shader::compileShader(Shader::ShaderType type, const std::string& sourceText)
 {
-	assert(!sourceText.empty());
+	assertTrue(!sourceText.empty());
 	if (sourceText.empty()) {
 		return 0;
 	}
@@ -122,8 +122,8 @@ GLuint Shader::compileShader(Shader::ShaderType type, const std::string& sourceT
 
 GLuint Shader::linkProgram(GLuint vertexShaderId, GLuint fragmentShaderId)
 {
-	assert(vertexShaderId > 0);
-	assert(fragmentShaderId > 0);
+	assertTrue(vertexShaderId > 0);
+	assertTrue(fragmentShaderId > 0);
 
 	// Create and link shader program.
 	const GLuint programId = glCreateProgram();
@@ -150,14 +150,14 @@ GLuint Shader::linkProgram(GLuint vertexShaderId, GLuint fragmentShaderId)
 
 void Shader::bind() const
 {
-	assert(isValid());
+	assertTrue(isValid());
 	glUseProgram(_shaderProgramId);
 }
 
 
 void Shader::setUniform1f(const std::string& name, float v1) const
 {
-	assert(isValid());
+	assertTrue(isValid());
 
 	// Must be called when the program is bound.
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
@@ -169,7 +169,7 @@ void Shader::setUniform1f(const std::string& name, float v1) const
 
 void Shader::setUniform2f(const std::string& name, float v1, float v2) const
 {
-	assert(isValid());
+	assertTrue(isValid());
 
 	// Must be called when the program is bound.
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
@@ -181,7 +181,7 @@ void Shader::setUniform2f(const std::string& name, float v1, float v2) const
 
 void Shader::setUniform3f(const std::string& name, float v1, float v2, float v3) const
 {
-	assert(isValid());
+	assertTrue(isValid());
 
 	// Must be called when the program is bound.
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
@@ -193,7 +193,7 @@ void Shader::setUniform3f(const std::string& name, float v1, float v2, float v3)
 
 void Shader::setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const
 {
-	assert(isValid());
+	assertTrue(isValid());
 
 	// Must be called when the program is bound.
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
@@ -205,7 +205,7 @@ void Shader::setUniform4f(const std::string& name, float v1, float v2, float v3,
 
 void Shader::setUniform1i(const std::string& name, int v1) const
 {
-	assert(isValid());
+	assertTrue(isValid());
 
 	// Must be called when the program is bound.
 	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
@@ -226,7 +226,7 @@ GLenum Shader::getGlShaderType(Shader::ShaderType type)
 			shaderType = GL_FRAGMENT_SHADER;
 			break;
 		default:
-			assert2(false, "Unknown Shader::ShaderType: " + std::to_string(static_cast<int>(type)));
+			assertTrueMsg(false, "Unknown Shader::ShaderType: " + std::to_string(static_cast<int>(type)));
 			break;
 	}
 
