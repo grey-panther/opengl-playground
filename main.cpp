@@ -155,11 +155,53 @@ void doOnce()
 		Color color;
 		TextureCoords texCoords;
 	};
+	/*
+	// Plane
 	const auto vertices = std::vector<VertexFormat> {
 			VertexFormat{{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f, 1.f}, {0.f, 0.f}},	// Left bottom
 			VertexFormat{{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f, 1.f}, {1.f, 0.f}},		// Right bottom
 			VertexFormat{{-0.5f, 0.5f, 0.f}, {0.f, 0.f, 1.f, 1.f}, {0.f, 1.f}},		// Left top
 			VertexFormat{{0.5f, 0.5f, 0.f}, {0.f, 1.f, 1.f, 1.f}, {1.f, 1.f}},		// Right top
+	};
+	 */
+	VertexFormat::Color color = {1.f, 1.f, 1.f, 1.f};
+	// Cube
+	//   7---6     11--14      *---*     23---22
+	//  /|  /|    /|  /|      /|  /|     /|  /|
+	// 3 4-2-5  10 8-15-13   * 18*-19  20-*-21*
+	// |/  |/    |/  |/      |/  |/     |/  |/
+	// 0---1     9---12     17---16     *---*
+	const auto vertices = std::vector<VertexFormat> {
+			// front
+			VertexFormat{{-1.f, -1.f, 1.f}, color, {0.f, 0.f}},
+			VertexFormat{{1.f, -1.f, 1.f}, color, {1.f, 0.f}},
+			VertexFormat{{1.f, 1.f, 1.f}, color, {1.f, 1.f}},
+			VertexFormat{{-1.f, 1.f, 1.f}, color, {0.f, 1.f}},
+			// back
+			VertexFormat{{-1.f, -1.f, -1.f}, color, {1.f, 0.f}},
+			VertexFormat{{1.f, -1.f, -1.f}, color, {0.f, 0.f}},
+			VertexFormat{{1.f, 1.f, -1.f}, color, {0.f, 1.f}},
+			VertexFormat{{-1.f, 1.f, -1.f}, color, {1.f, 1.f}},
+			// left
+			VertexFormat{{-1.f, -1.f, -1.f}, color, {0.f, 0.f}},
+			VertexFormat{{-1.f, -1.f, 1.f}, color, {1.f, 0.f}},
+			VertexFormat{{-1.f, 1.f, 1.f}, color, {1.f, 1.f}},
+			VertexFormat{{-1.f, 1.f, -1.f}, color, {0.f, 1.f}},
+			// right
+			VertexFormat{{1.f, -1.f, 1.f}, color, {0.f, 0.f}},
+			VertexFormat{{1.f, -1.f, -1.f}, color, {1.f, 0.f}},
+			VertexFormat{{1.f, 1.f, -1.f}, color, {1.f, 1.f}},
+			VertexFormat{{1.f, 1.f, 1.f}, color, {0.f, 1.f}},
+			// bottom
+			VertexFormat{{1.f, -1.f, 1.f}, color, {0.f, 0.f}},
+			VertexFormat{{-1.f, -1.f, 1.f}, color, {1.f, 0.f}},
+			VertexFormat{{-1.f, -1.f, -1.f}, color, {1.f, 1.f}},
+			VertexFormat{{1.f, -1.f, -1.f}, color, {0.f, 1.f}},
+			// top
+			VertexFormat{{-1.f, 1.f, 1.f}, color, {0.f, 0.f}},
+			VertexFormat{{1.f, 1.f, 1.f}, color, {1.f, 0.f}},
+			VertexFormat{{1.f, 1.f, -1.f}, color, {1.f, 1.f}},
+			VertexFormat{{-1.f, 1.f, -1.f}, color, {0.f, 1.f}},
 	};
 	_verticesAmount = vertices.size();
 
@@ -171,10 +213,30 @@ void doOnce()
 	GLuint elementsBuffer = 0;
 	glGenBuffers(1, &elementsBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsBuffer);
+
+	/*
+	// Plane
 	const auto indices = std::vector<unsigned int> {
 			0, 1, 2,
 			1, 2, 3,
 	};
+	 */
+	// Cube
+	const auto indices = std::vector<unsigned int> {
+			0, 1, 2,	// front
+			0, 2, 3,
+			5, 4, 7,	// back
+			5, 7, 6,
+			8, 9, 10,	// left
+			8, 10, 11,
+			12, 13, 14,	// right
+			12, 14, 15,
+			16, 17, 18,	// bottom
+			16, 18, 19,
+			20, 21, 22,	// top
+			20, 22, 23,
+	};
+
 	_indicesAmount = indices.size();
 	const size_t elementsBufferSize = _indicesAmount * sizeof(indices[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) elementsBufferSize, indices.data(), GL_STATIC_DRAW);
@@ -210,6 +272,9 @@ void doOnce()
 
 	// Reset bound VAO.
 	glBindVertexArray(0);
+
+	// Enable Z-buffer testing. It requires to clear z-buffer each frame calling glClear(GL_DEPTH_BUFFER_BIT).
+	glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -217,7 +282,7 @@ void doMainUpdate()
 {
 	// Clear the frame buffer.
 	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const GLint firstSamplerIndex = 0;
 	glActiveTexture(GL_TEXTURE0 + firstSamplerIndex);
@@ -240,11 +305,14 @@ void doMainUpdate()
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
 
 		glm::mat4 model = glm::mat4(1.f);
-		model = glm::rotate(model, glm::radians(-60.f), glm::vec3(1.f, 0.f, 0.f));
+		model = glm::scale(model, glm::vec3(0.2f));
+		model = glm::rotate(model, glm::radians(360.f) * progress, glm::vec3(0.f, 1.f, 0.f));
 		_shader->setMatrix4f("uModel", model);
 
 		glm::mat4 view = glm::mat4(1.f);
 		view = glm::translate(view, glm::vec3(0.f, 0.f, -2.f));
+		view = glm::rotate(view, glm::radians(45.f), glm::vec3(1.f, 0.f, 0.f));
+		view = glm::rotate(view, glm::radians(-45.f), glm::vec3(0.f, 1.f, 0.f));
 		_shader->setMatrix4f("uView", view);
 
 		glm::mat4 projection = glm::mat4(1.f);
