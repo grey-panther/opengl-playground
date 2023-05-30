@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -238,11 +239,19 @@ void doMainUpdate()
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
 
-		glm::mat4 transform = glm::mat4(1.f);
-		transform = glm::translate(transform, glm::vec3(0.5f, -0.4f, 0.f));
-		transform = glm::rotate(transform, float(timeSec), glm::vec3(0.f, 0.f, 1.f));
-		transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 1.f));
-		_shader->setMatrix4f("uTransform", transform);
+		glm::mat4 model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(-60.f), glm::vec3(1.f, 0.f, 0.f));
+		_shader->setMatrix4f("uModel", model);
+
+		glm::mat4 view = glm::mat4(1.f);
+		view = glm::translate(view, glm::vec3(0.f, 0.f, -2.f));
+		_shader->setMatrix4f("uView", view);
+
+		glm::mat4 projection = glm::mat4(1.f);
+		const float fovy = glm::quarter_pi<float>();
+		const float aspectRatio = WINDOW_WIDTH / (float) WINDOW_HEIGHT;
+		projection = glm::perspective(fovy, aspectRatio, 0.1f, 100.f);
+		_shader->setMatrix4f("uProjection", projection);
 	}
 
 	glBindVertexArray(_vertexArrayBufferId);
@@ -255,21 +264,6 @@ void doMainUpdate()
 
 	// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
 	glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
-
-	// Make the second draw call.
-	{
-		if (_shader) {
-			const double timeSec = glfwGetTime();
-			const auto scale = static_cast<float>(std::sin(timeSec)) * 0.8f;
-
-			glm::mat4 transform = glm::mat4(1.f);
-			transform = glm::translate(transform, glm::vec3(-0.4f, 0.5f, 0.f));
-			transform = glm::scale(transform, glm::vec3(scale, scale, 1.f));
-			_shader->setMatrix4f("uTransform", transform);
-		}
-		// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
-		glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
-	}
 }
 
 
