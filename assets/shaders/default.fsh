@@ -13,5 +13,5 @@ out vec4 fragColor;
 void main() {
 	vec4 color0 = texture(sampler0, vTexCoords);
 	vec4 color1 = texture(sampler1, vTexCoords);
-	fragColor = mix(color0, color1, uProgress);
+	fragColor = color0 * (1 - color1.a) + color1;
 }

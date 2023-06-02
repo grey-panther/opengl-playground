@@ -281,7 +281,7 @@ void doOnce()
 void doMainUpdate()
 {
 	// Clear the frame buffer.
-	glClearColor(0.1f, 0.05f, 0.05f, 1.f);
+	glClearColor(0.7f, 0.7f, 0.8f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	const GLint firstSamplerIndex = 0;
