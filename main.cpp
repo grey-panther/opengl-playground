@@ -1,6 +1,7 @@
 #include "Shader.hpp"
-
 #include "Utilities.hpp"
+#include "VertexFormat.hpp"
+#include "model/GeometricModelFactory.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -152,75 +153,13 @@ void doOnce()
 	glGenBuffers(1, &vboId);
 	glBindBuffer(GL_ARRAY_BUFFER, vboId);
 
+	//
 	// Fill vbo.
-	struct VertexFormat {
-		struct Pos {
-			float x = 0.f;
-			float y = 0.f;
-			float z = 0.f;
-		};
-		struct Color {
-			float r = 0.f;
-			float g = 0.f;
-			float b = 0.f;
-			float a = 0.f;
-		};
-		struct TextureCoords {
-			float u = 0.f;
-			float v = 0.f;
-		};
-		Pos pos;
-		Color color;
-		TextureCoords texCoords;
-	};
-	/*
-	// Plane
-	const auto vertices = std::vector<VertexFormat> {
-			VertexFormat{{-0.5f, -0.5f, 0.f}, {1.f, 0.f, 0.f, 1.f}, {0.f, 0.f}},	// Left bottom
-			VertexFormat{{0.5f, -0.5f, 0.f}, {0.f, 1.f, 0.f, 1.f}, {1.f, 0.f}},		// Right bottom
-			VertexFormat{{-0.5f, 0.5f, 0.f}, {0.f, 0.f, 1.f, 1.f}, {0.f, 1.f}},		// Left top
-			VertexFormat{{0.5f, 0.5f, 0.f}, {0.f, 1.f, 1.f, 1.f}, {1.f, 1.f}},		// Right top
-	};
-	 */
-	VertexFormat::Color color = {1.f, 1.f, 1.f, 1.f};
-	// Cube
-	//   7---6     11--14      *---*     23---22
-	//  /|  /|    /|  /|      /|  /|     /|  /|
-	// 3 4-2-5  10 8-15-13   * 18*-19  20-*-21*
-	// |/  |/    |/  |/      |/  |/     |/  |/
-	// 0---1     9---12     17---16     *---*
-	const auto vertices = std::vector<VertexFormat> {
-			// front
-			VertexFormat{{-1.f, -1.f, 1.f}, color, {0.f, 0.f}},
-			VertexFormat{{1.f, -1.f, 1.f}, color, {1.f, 0.f}},
-			VertexFormat{{1.f, 1.f, 1.f}, color, {1.f, 1.f}},
-			VertexFormat{{-1.f, 1.f, 1.f}, color, {0.f, 1.f}},
-			// back
-			VertexFormat{{-1.f, -1.f, -1.f}, color, {1.f, 0.f}},
-			VertexFormat{{1.f, -1.f, -1.f}, color, {0.f, 0.f}},
-			VertexFormat{{1.f, 1.f, -1.f}, color, {0.f, 1.f}},
-			VertexFormat{{-1.f, 1.f, -1.f}, color, {1.f, 1.f}},
-			// left
-			VertexFormat{{-1.f, -1.f, -1.f}, color, {0.f, 0.f}},
-			VertexFormat{{-1.f, -1.f, 1.f}, color, {1.f, 0.f}},
-			VertexFormat{{-1.f, 1.f, 1.f}, color, {1.f, 1.f}},
-			VertexFormat{{-1.f, 1.f, -1.f}, color, {0.f, 1.f}},
-			// right
-			VertexFormat{{1.f, -1.f, 1.f}, color, {0.f, 0.f}},
-			VertexFormat{{1.f, -1.f, -1.f}, color, {1.f, 0.f}},
-			VertexFormat{{1.f, 1.f, -1.f}, color, {1.f, 1.f}},
-			VertexFormat{{1.f, 1.f, 1.f}, color, {0.f, 1.f}},
-			// bottom
-			VertexFormat{{1.f, -1.f, 1.f}, color, {0.f, 0.f}},
-			VertexFormat{{-1.f, -1.f, 1.f}, color, {1.f, 0.f}},
-			VertexFormat{{-1.f, -1.f, -1.f}, color, {1.f, 1.f}},
-			VertexFormat{{1.f, -1.f, -1.f}, color, {0.f, 1.f}},
-			// top
-			VertexFormat{{-1.f, 1.f, 1.f}, color, {0.f, 0.f}},
-			VertexFormat{{1.f, 1.f, 1.f}, color, {1.f, 0.f}},
-			VertexFormat{{1.f, 1.f, -1.f}, color, {1.f, 1.f}},
-			VertexFormat{{-1.f, 1.f, -1.f}, color, {0.f, 1.f}},
-	};
+	//
+
+//	const GeometricModel model = GeometricModelFactory::CreateRectangleModel();
+	const GeometricModel model = GeometricModelFactory::CreateCubeModel();
+	const std::vector<VertexFormat>& vertices = model.GetVertices();
 	_verticesAmount = vertices.size();
 
 	const size_t bufferBytesSize = sizeof(vertices[0]) * _verticesAmount;
@@ -232,29 +171,7 @@ void doOnce()
 	glGenBuffers(1, &elementsBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsBuffer);
 
-	/*
-	// Plane
-	const auto indices = std::vector<unsigned int> {
-			0, 1, 2,
-			1, 2, 3,
-	};
-	 */
-	// Cube
-	const auto indices = std::vector<unsigned int> {
-			0, 1, 2,	// front
-			0, 2, 3,
-			5, 4, 7,	// back
-			5, 7, 6,
-			8, 9, 10,	// left
-			8, 10, 11,
-			12, 13, 14,	// right
-			12, 14, 15,
-			16, 17, 18,	// bottom
-			16, 18, 19,
-			20, 21, 22,	// top
-			20, 22, 23,
-	};
-
+	const std::vector<unsigned int>& indices = model.GetIndices();
 	_indicesAmount = indices.size();
 	const size_t elementsBufferSize = _indicesAmount * sizeof(indices[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) elementsBufferSize, indices.data(), GL_STATIC_DRAW);
