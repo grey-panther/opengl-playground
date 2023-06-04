@@ -29,6 +29,24 @@ static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
 static std::unique_ptr<Shader> _shader;
 
+struct CubeDrawParams
+{
+	glm::vec3 pos;
+	float angleDegrees = 0;
+};
+static std::vector<CubeDrawParams> _cubesDrawParams = {
+		{glm::vec3(0.0f, 0.0f, 0.0f), 0.f},
+		{glm::vec3(2.0f, 5.0f, -15.0f), 20.f},
+		{glm::vec3(-1.5f, -2.2f, -2.5f), 40.f},
+		{glm::vec3(-3.8f, -2.0f, -12.3f), 60.f},
+		{glm::vec3(2.4f, -0.4f, -3.5f), 70.f},
+		{glm::vec3(-1.7f, 3.0f, -7.5f), 80.f},
+		{glm::vec3(1.3f, -2.0f, -2.5f), 90.f},
+		{glm::vec3(1.5f, 2.0f, -2.5f), 110.f},
+		{glm::vec3(1.5f, 0.2f, -1.5f), 130.f},
+		{glm::vec3(-1.3f, 1.0f, -1.5f), 150.f},
+};
+
 
 void onGlfwError(int error, const char* description)
 {
@@ -304,15 +322,10 @@ void doMainUpdate()
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
 
-		glm::mat4 model = glm::mat4(1.f);
-		model = glm::scale(model, glm::vec3(0.2f));
-		model = glm::rotate(model, glm::radians(360.f) * progress, glm::vec3(0.f, 1.f, 0.f));
-		_shader->setMatrix4f("uModel", model);
-
 		glm::mat4 view = glm::mat4(1.f);
 		view = glm::translate(view, glm::vec3(0.f, 0.f, -2.f));
-		view = glm::rotate(view, glm::radians(45.f), glm::vec3(1.f, 0.f, 0.f));
-		view = glm::rotate(view, glm::radians(-45.f), glm::vec3(0.f, 1.f, 0.f));
+		view = glm::rotate(view, glm::radians(30.f), glm::vec3(1.f, 0.f, 0.f));
+		view = glm::rotate(view, glm::radians(360.f) * static_cast<float>(timeSec) * 0.2f, glm::vec3(0.f, 1.f, 0.f));
 		_shader->setMatrix4f("uView", view);
 
 		glm::mat4 projection = glm::mat4(1.f);
@@ -330,8 +343,18 @@ void doMainUpdate()
 	// Draw vertices directly from VBO connected to _vertexArrayBufferId.
 	// glDrawArrays(GL_TRIANGLES, 0, (GLsizei) _verticesAmount);
 
-	// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
-	glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
+	for (const auto& drawParams: _cubesDrawParams) {
+		if (_shader) {
+			glm::mat4 model = glm::mat4(1.f);
+			model = glm::translate(model, drawParams.pos);
+			model = glm::scale(model, glm::vec3(0.28f));
+			model = glm::rotate(model, glm::radians(drawParams.angleDegrees), glm::vec3(0.f, 1.f, 0.f));
+			_shader->setMatrix4f("uModel", model);
+		}
+
+		// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
+		glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
+	}
 }
 
 
