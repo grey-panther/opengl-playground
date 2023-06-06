@@ -157,9 +157,9 @@ void doOnce()
 	// Fill vbo.
 	//
 
-//	const GeometricModel model = GeometricModelFactory::CreateRectangleModel();
-	const GeometricModel model = GeometricModelFactory::CreateCubeModel();
-	const std::vector<VertexFormat>& vertices = model.GetVertices();
+//	const GeometricModel model = GeometricModelFactory::createRectangleModel();
+	const GeometricModel model = GeometricModelFactory::createCubeModel();
+	const std::vector<VertexFormat>& vertices = model.getVertices();
 	_verticesAmount = vertices.size();
 
 	const size_t bufferBytesSize = sizeof(vertices[0]) * _verticesAmount;
@@ -171,7 +171,7 @@ void doOnce()
 	glGenBuffers(1, &elementsBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementsBuffer);
 
-	const std::vector<unsigned int>& indices = model.GetIndices();
+	const std::vector<unsigned int>& indices = model.getIndices();
 	_indicesAmount = indices.size();
 	const size_t elementsBufferSize = _indicesAmount * sizeof(indices[0]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr) elementsBufferSize, indices.data(), GL_STATIC_DRAW);

@@ -2,7 +2,7 @@
 
 
 [[nodiscard]]
-GeometricModel GeometricModelFactory::CreateRectangleModel()
+GeometricModel GeometricModelFactory::createRectangleModel()
 {
 	auto vertices = std::vector<VertexFormat> {
 			VertexFormat{{-1.f, -1.f, 0.f}, {1.f, 0.f, 0.f, 1.f}, {0.f, 0.f}},		// Left bottom
@@ -21,7 +21,7 @@ GeometricModel GeometricModelFactory::CreateRectangleModel()
 
 
 [[nodiscard]]
-GeometricModel GeometricModelFactory::CreateCubeModel()
+GeometricModel GeometricModelFactory::createCubeModel()
 {
 	VertexFormat::Color color = {1.f, 1.f, 1.f, 1.f};
 

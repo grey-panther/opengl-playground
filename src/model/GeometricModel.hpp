@@ -17,10 +17,10 @@ public:
 	}
 
 	[[nodiscard]]
-	const std::vector<VertexFormat>& GetVertices() const { return _vertices; };
+	const std::vector<VertexFormat>& getVertices() const { return _vertices; };
 
 	[[nodiscard]]
-	const std::vector<IndexType>& GetIndices() const { return _indices; };
+	const std::vector<IndexType>& getIndices() const { return _indices; };
 
 private:
 	std::vector<VertexFormat> _vertices;

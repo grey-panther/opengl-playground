@@ -7,8 +7,8 @@ class GeometricModelFactory
 {
 public:
 	[[nodiscard]]
-	static GeometricModel CreateRectangleModel();
+	static GeometricModel createRectangleModel();
 
 	[[nodiscard]]
-	static GeometricModel CreateCubeModel();
+	static GeometricModel createCubeModel();
 };
