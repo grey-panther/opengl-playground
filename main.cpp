@@ -239,10 +239,13 @@ void doMainUpdate()
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
 
-		glm::mat4 view = glm::mat4(1.f);
-		view = glm::translate(view, glm::vec3(0.f, 0.f, -2.f));
-		view = glm::rotate(view, glm::radians(30.f), glm::vec3(1.f, 0.f, 0.f));
-		view = glm::rotate(view, glm::radians(360.f) * static_cast<float>(timeSec) * 0.2f, glm::vec3(0.f, 1.f, 0.f));
+		const float radius = 2.f;
+		const float cameraX = std::sin(static_cast<float>(timeSec)) * radius;
+		const float cameraZ = std::cos(static_cast<float>(timeSec)) * radius;
+		const auto cameraPos = glm::vec3(cameraX, 1.f, cameraZ);
+		const auto cameraTarget = glm::vec3(0.f, 0.f, 0.f);
+		const auto worldUp = glm::vec3(0.f, 1.f, 0.f);
+		const glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, worldUp);
 		_shader->setMatrix4f("uView", view);
 
 		glm::mat4 projection = glm::mat4(1.f);
