@@ -23,12 +23,26 @@ static constexpr int WINDOW_WIDTH = 1024;
 static constexpr int WINDOW_HEIGHT = 728;
 static constexpr auto WINDOW_TITLE = "LearnOpenGL";
 
+static constexpr float FOV_DEG_MIN = 1.f;
+static constexpr float FOV_DEG_MAX = 45.f;
+static constexpr float CAMERA_MOVEMENT_SPEED = 0.1f;
+static constexpr float CAMERA_CURSOR_SENSITIVITY = 0.2f;
+static constexpr float CAMERA_SCROLL_SENSITIVITY = 0.5f;
+static constexpr glm::vec3 WORLD_UP_DIRECTION = {0.f, 1.f, 0.f};
+
 static GLuint _vertexArrayBufferId = 0;
 static GLuint _wallTextureId = 0;
 static GLuint _faceTextureId = 0;
 static size_t _verticesAmount = 0;
 static size_t _indicesAmount = 0;
 static std::unique_ptr<Shader> _shader;
+
+static glm::vec3 _cameraPosition = {0.f, 0.f, 1.f};
+static glm::vec3 _cameraDirection = {0.f, 0.f, -1.f};
+static float _yawDegrees = -90.f;
+static float _pitchDegrees = 0.f;
+static float _cameraFovDegrees = FOV_DEG_MAX;
+static glm::vec2 _cursorPos = {0.f, 0.f};
 
 struct CubeDrawParams
 {
@@ -65,10 +79,66 @@ void onFrameBufferSizeChanged(GLFWwindow* window, int width, int height)
 }
 
 
+void onScroll(GLFWwindow* window, double offsetX, double offsetY)
+{
+	(void)(window);
+	(void)(offsetX);
+
+	// When a mouse wheel is scrolled up, positive offsetY comes.
+	const float fovDiff = - static_cast<float>(offsetY) * CAMERA_SCROLL_SENSITIVITY;
+	_cameraFovDegrees = std::clamp(_cameraFovDegrees + fovDiff, FOV_DEG_MIN, FOV_DEG_MAX);
+}
+
+
+void onCursorMove(GLFWwindow* window, double posX, double posY)
+{
+	(void)(window);
+	const glm::vec2 newCursorPos = {static_cast<float>(posX), static_cast<float>(posY)};
+
+	const float diffY = newCursorPos.y - _cursorPos.y;
+	_pitchDegrees = std::clamp(_pitchDegrees - diffY * CAMERA_CURSOR_SENSITIVITY, -89.f, 89.f);
+
+	const float diffX = newCursorPos.x - _cursorPos.x;
+	_yawDegrees += diffX * CAMERA_CURSOR_SENSITIVITY;
+	while (_yawDegrees > 360.f) {
+		_yawDegrees -= 360.f;
+	}
+	while (_yawDegrees < 0.f) {
+		_yawDegrees += 360.f;
+	}
+
+	const float pitchCos = std::cos(glm::radians(_pitchDegrees));
+	_cameraDirection.x = std::cos(glm::radians(_yawDegrees)) * pitchCos;
+	_cameraDirection.y = std::sin(glm::radians(_pitchDegrees));
+	_cameraDirection.z = std::sin(glm::radians(_yawDegrees)) * pitchCos;
+	_cameraDirection = glm::normalize(_cameraDirection);
+
+	_cursorPos = newCursorPos;
+}
+
+
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		_cameraPosition += _cameraDirection * CAMERA_MOVEMENT_SPEED;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		_cameraPosition -= _cameraDirection * CAMERA_MOVEMENT_SPEED;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		const glm::vec3 rightDir = glm::cross(_cameraDirection, WORLD_UP_DIRECTION);
+		_cameraPosition -= rightDir * CAMERA_MOVEMENT_SPEED;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		const glm::vec3 rightDir = glm::cross(_cameraDirection, WORLD_UP_DIRECTION);
+		_cameraPosition += rightDir * CAMERA_MOVEMENT_SPEED;
 	}
 }
 
@@ -239,19 +309,12 @@ void doMainUpdate()
 		_shader->setUniform1i("sampler0", firstSamplerIndex);
 		_shader->setUniform1i("sampler1", secondSamplerIndex);
 
-		const float radius = 2.f;
-		const float cameraX = std::sin(static_cast<float>(timeSec)) * radius;
-		const float cameraZ = std::cos(static_cast<float>(timeSec)) * radius;
-		const auto cameraPos = glm::vec3(cameraX, 1.f, cameraZ);
-		const auto cameraTarget = glm::vec3(0.f, 0.f, 0.f);
-		const auto worldUp = glm::vec3(0.f, 1.f, 0.f);
-		const glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, worldUp);
+		const glm::mat4 view = glm::lookAt(_cameraPosition, _cameraPosition + _cameraDirection, WORLD_UP_DIRECTION);
 		_shader->setMatrix4f("uView", view);
 
 		glm::mat4 projection = glm::mat4(1.f);
-		const float fovy = glm::quarter_pi<float>();
 		const float aspectRatio = WINDOW_WIDTH / (float) WINDOW_HEIGHT;
-		projection = glm::perspective(fovy, aspectRatio, 0.1f, 100.f);
+		projection = glm::perspective(glm::radians(_cameraFovDegrees), aspectRatio, 0.1f, 100.f);
 		_shader->setMatrix4f("uProjection", projection);
 	}
 
@@ -323,6 +386,19 @@ int main()
 	glfwGetFramebufferSize(window, &width, &height);
 	onFrameBufferSizeChanged(window, width, height);
 	glfwSetFramebufferSizeCallback(window, onFrameBufferSizeChanged);
+
+	// Set mouse input.
+	glfwSetScrollCallback(window, onScroll);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if (glfwRawMouseMotionSupported() == GLFW_TRUE) {
+		glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+	}
+	glfwSetCursorPosCallback(window, onCursorMove);
+	double cursorX = 0.f;
+	double cursorY = 0.f;
+	glfwGetCursorPos(window, &cursorX, &cursorY);
+	_cursorPos.x = static_cast<float>(cursorX);
+	_cursorPos.y = static_cast<float>(cursorY);
 
 	doOnce();
 
