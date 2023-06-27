@@ -1,7 +1,5 @@
 #include "FreeMotionCamera.hpp"
 
-#include "camera/MovementDirection.hpp"
-
 #include <algorithm>
 
 #include <glm/ext/matrix_transform.hpp>
@@ -19,26 +17,19 @@ float FreeMotionCamera::getFovYRadians() const
 }
 
 
-void FreeMotionCamera::processMovementInput(MovementDirection direction)
+void FreeMotionCamera::processMovementInput(float axisX, float axisY)
 {
-	if (direction == MovementDirection::NONE) {
+	glm::vec3 dir = _cameraDirection * std::clamp(axisY, -1.f, 1.f);
+
+	const glm::vec3 rightDir = glm::normalize(glm::cross(_cameraDirection, WORLD_UP_DIRECTION));
+	dir += rightDir * std::clamp(axisX, -1.f, 1.f);
+
+	if (glm::length(dir) <= std::numeric_limits<float>::epsilon()) {
 		return;
 	}
 
-	if (direction == MovementDirection::FORWARD) {
-		_cameraPosition += _cameraDirection * CAMERA_MOVEMENT_SPEED;
-	}
-	else if (direction == MovementDirection::BACKWARD) {
-		_cameraPosition -= _cameraDirection * CAMERA_MOVEMENT_SPEED;
-	}
-	else if (direction == MovementDirection::LEFT) {
-		const glm::vec3 rightDir = glm::cross(_cameraDirection, WORLD_UP_DIRECTION);
-		_cameraPosition -= rightDir * CAMERA_MOVEMENT_SPEED;
-	}
-	else if (direction == MovementDirection::RIGHT) {
-		const glm::vec3 rightDir = glm::cross(_cameraDirection, WORLD_UP_DIRECTION);
-		_cameraPosition += rightDir * CAMERA_MOVEMENT_SPEED;
-	}
+	dir = glm::normalize(dir);
+	_cameraPosition += dir * CAMERA_MOVEMENT_SPEED;
 }
 
 

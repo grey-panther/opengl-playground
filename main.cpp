@@ -101,20 +101,31 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
 
+	float axisX = 0.f;
+	float axisY = 0.f;
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		_camera.processMovementInput(MovementDirection::FORWARD);
+		// forward
+		axisY += 1.f;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		_camera.processMovementInput(MovementDirection::BACKWARD);
+		// backward
+		axisY -= 1.f;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		_camera.processMovementInput(MovementDirection::LEFT);
+		// left
+		axisX -= 1.f;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		_camera.processMovementInput(MovementDirection::RIGHT);
+		// right
+		axisX += 1.f;
+	}
+
+	if ((axisX != 0.f) || (axisY != 0.f)) {
+		_camera.processMovementInput(axisX, axisY);
 	}
 }
 

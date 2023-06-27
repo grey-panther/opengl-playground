@@ -3,9 +3,6 @@
 #include <glm/mat4x4.hpp>
 
 
-enum class MovementDirection;
-
-
 class FreeMotionCamera
 {
 private:
@@ -23,14 +20,18 @@ public:
 	[[nodiscard]]
 	float getFovYRadians() const;
 
-	void processMovementInput(MovementDirection direction);
+	/**
+	 * @brief Process the position change input.
+	 * @param axisX (axisX < 0) - moving left; (axisX > 0) - moving right; The value is clamped in [-1; 1].
+	 * @param axisY (axisY < 0) - moving backward; (axisY > 0) - moving forward; The value is clamped in [-1; 1].
+	 */
+	void processMovementInput(float axisX, float axisY);
 
 	void processRotationInput(float diffX, float diffY);
 
 	/**
-	 * Zoom the camera view through changing its field of view angle.
-	 * diff > 0 - zoom in.
-	 * diff < 0 - zoom out.
+	 * @brief Zoom the camera view through changing its angle of field of view.
+	 * @param diff (diff > 0) - zoom in; (diff < 0) - zoom out.
 	 */
 	void processZoomInput(float diff);
 
