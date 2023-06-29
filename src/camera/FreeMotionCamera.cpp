@@ -7,20 +7,20 @@
 
 glm::mat4 FreeMotionCamera::getViewMatrix() const
 {
-	return glm::lookAt(_cameraPosition, _cameraPosition + _cameraDirection, WORLD_UP_DIRECTION);
+	return glm::lookAt(_position, _position + _lookDirection, WORLD_UP_DIRECTION);
 }
 
 
 float FreeMotionCamera::getFovYRadians() const
 {
-	return glm::radians(_cameraFovDegrees);
+	return glm::radians(_fovDegrees);
 }
 
 
 void FreeMotionCamera::update(float dt)
 {
 	if (glm::length(_movementDirection) > 0.f) {
-		_cameraPosition += CAMERA_MOVEMENT_SPEED * dt * _movementDirection;
+		_position += CAMERA_MOVEMENT_SPEED * dt * _movementDirection;
 		_movementDirection = glm::vec3(0.f);
 	}
 }
@@ -28,9 +28,9 @@ void FreeMotionCamera::update(float dt)
 
 void FreeMotionCamera::processMovementInput(float axisX, float axisY)
 {
-	glm::vec3 dir = _cameraDirection * std::clamp(axisY, -1.f, 1.f);
+	glm::vec3 dir = _lookDirection * std::clamp(axisY, -1.f, 1.f);
 
-	const glm::vec3 rightDir = glm::normalize(glm::cross(_cameraDirection, WORLD_UP_DIRECTION));
+	const glm::vec3 rightDir = glm::normalize(glm::cross(_lookDirection, WORLD_UP_DIRECTION));
 	dir += rightDir * std::clamp(axisX, -1.f, 1.f);
 
 	if (glm::length(dir) <= std::numeric_limits<float>::epsilon()) {
@@ -54,10 +54,10 @@ void FreeMotionCamera::processRotationInput(float diffX, float diffY)
 	}
 
 	const float pitchCos = std::cos(glm::radians(_pitchDegrees));
-	_cameraDirection.x = std::cos(glm::radians(_yawDegrees)) * pitchCos;
-	_cameraDirection.y = std::sin(glm::radians(_pitchDegrees));
-	_cameraDirection.z = std::sin(glm::radians(_yawDegrees)) * pitchCos;
-	_cameraDirection = glm::normalize(_cameraDirection);
+	_lookDirection.x = std::cos(glm::radians(_yawDegrees)) * pitchCos;
+	_lookDirection.y = std::sin(glm::radians(_pitchDegrees));
+	_lookDirection.z = std::sin(glm::radians(_yawDegrees)) * pitchCos;
+	_lookDirection = glm::normalize(_lookDirection);
 }
 
 
@@ -66,5 +66,5 @@ void FreeMotionCamera::processZoomInput(float diff)
 	// The smaller the fov, the larger the zoom.
 	// When the fov is decreased, the camera view is zoomed in.
 	const float fovDiff = - diff * CAMERA_ZOOM_SENSITIVITY;
-	_cameraFovDegrees = std::clamp(_cameraFovDegrees + fovDiff, FOV_DEG_MIN, FOV_DEG_MAX);
+	_fovDegrees = std::clamp(_fovDegrees + fovDiff, FOV_DEG_MIN, FOV_DEG_MAX);
 }

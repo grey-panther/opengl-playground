@@ -38,10 +38,10 @@ public:
 	void processZoomInput(float diff);
 
 private:
-	glm::vec3 _cameraPosition = {0.f, 0.f, 1.f};
-	glm::vec3 _cameraDirection = {0.f, 0.f, -1.f};
+	glm::vec3 _position = {0.f, 0.f, 1.f};
+	glm::vec3 _lookDirection = {0.f, 0.f, -1.f};
 	glm::vec3 _movementDirection = {0.f, 0.f, 0.f};
 	float _yawDegrees = -90.f;
 	float _pitchDegrees = 0.f;
-	float _cameraFovDegrees = FOV_DEG_MAX;
+	float _fovDegrees = FOV_DEG_MAX;
 };
