@@ -35,6 +35,7 @@ static std::unique_ptr<Shader> _shader;
 static FreeMotionCamera _camera;
 
 static glm::vec2 _cursorPos = {0.f, 0.f};
+static double _lastUpdateTimeSeconds = 0.f;
 
 struct CubeDrawParams
 {
@@ -195,6 +196,8 @@ GLuint loadTexture(const std::string_view textureFilename, const GLint internalF
 
 void doOnce()
 {
+	_lastUpdateTimeSeconds = glfwGetTime();
+
 	loadShaderProgram();
 
 	_wallTextureId = loadTexture("../assets/textures/wall.jpg", GL_RGB, GL_RGB);
@@ -272,6 +275,11 @@ void doOnce()
 
 void doMainUpdate()
 {
+	const double curTimeSeconds = glfwGetTime();
+	const auto deltaTime = static_cast<float>(curTimeSeconds - _lastUpdateTimeSeconds);
+	_lastUpdateTimeSeconds = curTimeSeconds;
+	_camera.update(deltaTime);
+
 	// Clear the frame buffer.
 	glClearColor(0.7f, 0.7f, 0.8f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -288,8 +296,7 @@ void doMainUpdate()
 		_shader->bind();
 
 		// Set uniform values after the shader binding.
-		const double timeSec = glfwGetTime();
-		const auto v = static_cast<float>(std::sin(timeSec));
+		const auto v = static_cast<float>(std::sin(curTimeSeconds));
 		const float progress = v * 0.5f + 0.5f; // [0, 1]
 		_shader->setUniform1f("uProgress", progress);
 

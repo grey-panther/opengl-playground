@@ -8,7 +8,7 @@ class FreeMotionCamera
 private:
 	static constexpr float FOV_DEG_MIN = 1.f;
 	static constexpr float FOV_DEG_MAX = 45.f;
-	static constexpr float CAMERA_MOVEMENT_SPEED = 0.1f;
+	static constexpr float CAMERA_MOVEMENT_SPEED = 10.f;
 	static constexpr float CAMERA_ROTATION_SENSITIVITY = 0.2f;
 	static constexpr float CAMERA_ZOOM_SENSITIVITY = 0.5f;
 	static constexpr glm::vec3 WORLD_UP_DIRECTION = {0.f, 1.f, 0.f};
@@ -19,6 +19,8 @@ public:
 
 	[[nodiscard]]
 	float getFovYRadians() const;
+
+	void update(float dt);
 
 	/**
 	 * @brief Process the position change input.
@@ -38,6 +40,7 @@ public:
 private:
 	glm::vec3 _cameraPosition = {0.f, 0.f, 1.f};
 	glm::vec3 _cameraDirection = {0.f, 0.f, -1.f};
+	glm::vec3 _movementDirection = {0.f, 0.f, 0.f};
 	float _yawDegrees = -90.f;
 	float _pitchDegrees = 0.f;
 	float _cameraFovDegrees = FOV_DEG_MAX;

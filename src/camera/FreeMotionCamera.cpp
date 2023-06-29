@@ -17,6 +17,15 @@ float FreeMotionCamera::getFovYRadians() const
 }
 
 
+void FreeMotionCamera::update(float dt)
+{
+	if (glm::length(_movementDirection) > 0.f) {
+		_cameraPosition += CAMERA_MOVEMENT_SPEED * dt * _movementDirection;
+		_movementDirection = glm::vec3(0.f);
+	}
+}
+
+
 void FreeMotionCamera::processMovementInput(float axisX, float axisY)
 {
 	glm::vec3 dir = _cameraDirection * std::clamp(axisY, -1.f, 1.f);
@@ -28,8 +37,7 @@ void FreeMotionCamera::processMovementInput(float axisX, float axisY)
 		return;
 	}
 
-	dir = glm::normalize(dir);
-	_cameraPosition += dir * CAMERA_MOVEMENT_SPEED;
+	_movementDirection = glm::normalize(dir);
 }
 
 
