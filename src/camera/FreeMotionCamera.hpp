@@ -38,6 +38,14 @@ public:
 	void processZoomInput(float diff);
 
 private:
+	[[nodiscard]]
+	static glm::mat4 calculateViewMatrix(
+			const glm::vec3& cameraPos,
+			const glm::vec3& lookAtPos,
+			const glm::vec3& worldUpDirection
+	);
+
+private:
 	glm::vec3 _position = {0.f, 0.f, 1.f};
 	glm::vec3 _lookDirection = {0.f, 0.f, -1.f};
 	glm::vec3 _movementDirection = {0.f, 0.f, 0.f};

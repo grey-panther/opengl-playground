@@ -7,7 +7,8 @@
 
 glm::mat4 FreeMotionCamera::getViewMatrix() const
 {
-	return glm::lookAt(_position, _position + _lookDirection, WORLD_UP_DIRECTION);
+	// return glm::lookAt(_position, _position + _lookDirection, WORLD_UP_DIRECTION);
+	return calculateViewMatrix(_position, _position + _lookDirection, WORLD_UP_DIRECTION);
 }
 
 
@@ -67,4 +68,28 @@ void FreeMotionCamera::processZoomInput(float diff)
 	// When the fov is decreased, the camera view is zoomed in.
 	const float fovDiff = - diff * CAMERA_ZOOM_SENSITIVITY;
 	_fovDegrees = std::clamp(_fovDegrees + fovDiff, FOV_DEG_MIN, FOV_DEG_MAX);
+}
+
+
+glm::mat4 FreeMotionCamera::calculateViewMatrix(
+		const glm::vec3& cameraPos,
+		const glm::vec3& lookAtPos,
+		const glm::vec3& worldUpDirection
+)
+{
+	// It's supposed to work like glm::lookAt() function for right-handed coordinate system.
+	// The custom implementation is just for practice.
+
+	// i, j, k - basis vectors of new coordinate system (view space).
+	const glm::vec3 k = glm::normalize((cameraPos - lookAtPos));
+	const glm::vec3 i = glm::normalize(glm::cross(worldUpDirection, k));
+	const glm::vec3 j = glm::normalize(glm::cross(k, i));
+
+	// GLSL matrix has column-major order.
+	auto m = glm::mat4(1);
+	m[0][0] = i.x;	m[1][0] = i.y;	m[2][0] = i.z;	m[3][0] = glm::dot(i, -cameraPos);	// The first row.
+	m[0][1] = j.x;	m[1][1] = j.y;	m[2][1] = j.z;	m[3][1] = glm::dot(j, -cameraPos);	// The second row.
+	m[0][2] = k.x;	m[1][2] = k.y;	m[2][2] = k.z;	m[3][2] = glm::dot(k, -cameraPos);	// The third row.
+
+	return m;
 }
