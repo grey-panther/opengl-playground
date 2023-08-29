@@ -1,11 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <string_view>
 
 #include <glad/glad.h>
 #include <glm/fwd.hpp>
 
+
+class ShaderUniformStore;
+using ShaderUniformStorePtr = std::unique_ptr<ShaderUniformStore>;
 
 class Shader
 {
@@ -32,19 +36,13 @@ public:
 
 	void bind() const;
 
-	void setUniform1f(const std::string& name, float v1) const;
+	ShaderUniformStore& getUniforms() { return *_uniforms; }
 
-	void setUniform2f(const std::string& name, float v1, float v2) const;
-
-	void setUniform3f(const std::string& name, float v1, float v2, float v3) const;
-
-	void setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const;
-
-	void setUniform1i(const std::string& name, int v1) const;
-
-	void setMatrix4f(const std::string& name, const glm::mat4& mat) const;
+	const ShaderUniformStore& getUniforms() const { return *_uniforms; }
 
 private:
+	void updateUniformValues() const;
+
 	static std::string loadShaderText(std::string_view fileName);
 
 	static GLuint compileShader(ShaderType type, const std::string& sourceText);
@@ -57,4 +55,6 @@ private:
 
 private:
 	GLuint _shaderProgramId = 0;
+
+	ShaderUniformStorePtr _uniforms;
 };

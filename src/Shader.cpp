@@ -1,9 +1,13 @@
 #include "Shader.hpp"
+
 #include "Utilities.hpp"
+#include "ShaderUniform.hpp"
+#include "ShaderUniformStore.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
@@ -11,6 +15,8 @@
 
 Shader::Shader(std::string_view vertexFileName, std::string_view fragmentFileName)
 {
+	_uniforms = std::make_unique<ShaderUniformStore>();
+
 	// Load and compile vertex shader.
 	const std::string vertexText = loadShaderText(vertexFileName);
 	const GLuint vertexShaderId = compileShader(ShaderType::Vertex, vertexText);
@@ -60,6 +66,7 @@ Shader& Shader::operator=(Shader&& other) noexcept
 
 	deleteProgram();
 	std::swap(_shaderProgramId, other._shaderProgramId);
+	std::swap(_uniforms, other._uniforms);
 	return *this;
 }
 
@@ -70,6 +77,7 @@ void Shader::deleteProgram()
 		glDeleteProgram(_shaderProgramId);
 	}
 	_shaderProgramId = 0;
+	_uniforms->resetAll();
 }
 
 
@@ -155,79 +163,35 @@ void Shader::bind() const
 {
 	assertTrue(isValid());
 	glUseProgram(_shaderProgramId);
+
+	updateUniformValues();
 }
 
 
-void Shader::setUniform1f(const std::string& name, float v1) const
+void Shader::updateUniformValues() const
 {
 	assertTrue(isValid());
+	// Also assert that the current program is bound to GL context. Don't know yet how to check it.
 
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		glUniform1f(location, v1);
+	if (!_uniforms) {
+		return;
 	}
-}
 
+	for (const auto& [name, uniformPtr] : *_uniforms) {
+		if (!uniformPtr) {
+			return;
+		}
 
-void Shader::setUniform2f(const std::string& name, float v1, float v2) const
-{
-	assertTrue(isValid());
+		// TODO Check that the type of *uniformPtr matches
+		//  to the type of the real uniform in the shader program.
 
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		glUniform2f(location, v1, v2);
-	}
-}
+		// glGetUniformLocation must be called when the program is bound.
+		const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
+		if (location >= 0) {
+			uniformPtr->bind(location);
 
-
-void Shader::setUniform3f(const std::string& name, float v1, float v2, float v3) const
-{
-	assertTrue(isValid());
-
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		glUniform3f(location, v1, v2, v3);
-	}
-}
-
-
-void Shader::setUniform4f(const std::string& name, float v1, float v2, float v3, float v4) const
-{
-	assertTrue(isValid());
-
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		glUniform4f(location, v1, v2, v3, v4);
-	}
-}
-
-
-void Shader::setUniform1i(const std::string& name, int v1) const
-{
-	assertTrue(isValid());
-
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		glUniform1i(location, v1);
-	}
-}
-
-
-void Shader::setMatrix4f(const std::string& name, const glm::mat4& mat) const
-{
-	assertTrue(isValid());
-
-	// Must be called when the program is bound.
-	const GLint location = glGetUniformLocation(_shaderProgramId, name.data());
-	if (location >= 0) {
-		const GLsizei count = 1;
-		const GLboolean transpose = GL_FALSE;
-		glUniformMatrix4fv(location, count, transpose, glm::value_ptr(mat));
+			handleGLErrors();
+		}
 	}
 }
 

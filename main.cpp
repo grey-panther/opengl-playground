@@ -1,4 +1,6 @@
 #include "Shader.hpp"
+#include "ShaderUniform.hpp"
+#include "ShaderUniformStore.hpp"
 #include "Utilities.hpp"
 #include "VertexFormat.hpp"
 #include "camera/FreeMotionCamera.hpp"
@@ -293,24 +295,23 @@ void doMainUpdate()
 	glBindTexture(GL_TEXTURE_2D, _faceTextureId);
 
 	if (_shader) {
-		_shader->bind();
+		ShaderUniformStore& uniforms = _shader->getUniforms();
 
 		// Set uniform values after the shader binding.
 		const auto v = static_cast<float>(std::sin(curTimeSeconds));
 		const float progress = v * 0.5f + 0.5f; // [0, 1]
-		_shader->setUniform1f("uProgress", progress);
+		uniforms.set(ShaderUniform::Float("uProgress", progress));
 
-		_shader->setUniform1i("sampler0", firstSamplerIndex);
-		_shader->setUniform1i("sampler1", secondSamplerIndex);
+		uniforms.set(ShaderUniform::Sampler("sampler0", firstSamplerIndex));
+		uniforms.set(ShaderUniform::Sampler("sampler1", secondSamplerIndex));
 
 		const glm::mat4 view = _camera.getViewMatrix();
-		_shader->setMatrix4f("uView", view);
+		uniforms.set(ShaderUniform::Mat4("uView", view));
 
-		glm::mat4 projection = glm::mat4(1.f);
 		const float aspectRatio = WINDOW_WIDTH / (float) WINDOW_HEIGHT;
 		const float fovY = _camera.getFovYRadians();
-		projection = glm::perspective(fovY, aspectRatio, 0.1f, 100.f);
-		_shader->setMatrix4f("uProjection", projection);
+		const glm::mat4 projection = glm::perspective(fovY, aspectRatio, 0.1f, 100.f);
+		uniforms.set(ShaderUniform::Mat4("uProjection", projection));
 	}
 
 	glBindVertexArray(_vertexArrayBufferId);
@@ -327,9 +328,10 @@ void doMainUpdate()
 			model = glm::translate(model, drawParams.pos);
 			model = glm::scale(model, glm::vec3(0.28f));
 			model = glm::rotate(model, glm::radians(drawParams.angleDegrees), glm::vec3(0.f, 1.f, 0.f));
-			_shader->setMatrix4f("uModel", model);
+			_shader->getUniforms().set(ShaderUniform::Mat4("uModel", model));
 		}
 
+		_shader->bind();
 		// Draw vertices from VBO whom indices appear in EBO connected to _vertexArrayBufferId.
 		glDrawElements(GL_TRIANGLES, (GLsizei) _indicesAmount, GL_UNSIGNED_INT, nullptr);
 	}
